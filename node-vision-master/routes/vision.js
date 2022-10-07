@@ -5,29 +5,30 @@ var AWS = require("aws-sdk");
 
 router.post("/classify", function (req, res, next) {
   // DON'T return the hardcoded response after implementing the backend
-  let response = ["shoe", "red", "nike"];
 
+  let responses = [];
+
+  console.log(req.files.file.name);
+
+  const photo = req.files.file.data;
   // Your code starts here //
 
   //aws access details
-  const config = new AWS.Config({
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-    region: process.env.AWS_REGION,
+  AWS.config.update({
+    accessKeyId: "",
+    secretAccessKey: "",
+    region: "",
   });
 
   //input parameters
   const params = {
     Image: {
-      S3Object: {
-        Bucket: "testingbucket",
-        Name: req.files.file,
-      },
+      Bytes: photo,
     },
     MaxLabels: 10,
   };
 
-  //cal aws rekognition class
+  //call aws rekognition class
   const client = new AWS.Rekognition();
 
   //detect labels
@@ -37,6 +38,7 @@ router.post("/classify", function (req, res, next) {
     } else {
       console.log(`Detected labels for: ${photo}`);
       response.Labels.forEach((label) => {
+        responses.push(label.Name);
         console.log(`Label:      ${label.Name}`);
         console.log(`Confidence: ${label.Confidence}`);
         console.log("Instances:");
@@ -56,7 +58,7 @@ router.post("/classify", function (req, res, next) {
       });
       //response
       res.json({
-        labels: response,
+        labels: responses,
       });
     }
   });
